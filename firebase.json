@@ -1,0 +1,28 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "lactadel",
+          "appId": "1:841416327468:android:2386c216b692e5a8a3ec89",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "lactadel",
+          "configurations": {
+            "android": "1:841416327468:android:2386c216b692e5a8a3ec89",
+            "ios": "1:841416327468:ios:fd5575df0b7ac23ea3ec89",
+            "web": "1:841416327468:web:ee121379aa03089ca3ec89",
+            "windows": "1:841416327468:web:6d50f62d0fe8c907a3ec89"
+          }
+        }
+      }
+    }
+  }
+}

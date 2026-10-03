@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "841416327468",
+    "firebase_url": "https://lactadel-default-rtdb.firebaseio.com",
+    "project_id": "lactadel",
+    "storage_bucket": "lactadel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:841416327468:android:2386c216b692e5a8a3ec89",
+        "android_client_info": {
+          "package_name": "com.lactadel.lactadel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "841416327468-dgfkdbqtft4cgjaj5g13b0e21rgkvttm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAURHAI9pRMMs7sA1yVVPATuc_Q8Kze1EE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "841416327468-dgfkdbqtft4cgjaj5g13b0e21rgkvttm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
