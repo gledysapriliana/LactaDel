@@ -1,6 +1,7 @@
 /// Service notifikasi lokal untuk pengingat menyusui.
 /// Menggunakan flutter_local_notifications + timezone.
 /// Mendukung: notifikasi, getar, atau keduanya.
+/// Catatan: Tidak didukung di platform Web (kIsWeb).
 library;
 
 import 'package:flutter/foundation.dart';
@@ -13,7 +14,7 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin =
+  late final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   /// ID channel notifikasi
@@ -28,6 +29,9 @@ class NotificationService {
 
   // ─── Inisialisasi ───
   Future<void> initialize() async {
+    // Tidak didukung di Web
+    if (kIsWeb) return;
+
     // Setup timezone
     tz.initializeTimeZones();
     try {
@@ -59,6 +63,9 @@ class NotificationService {
 
   // ─── Minta izin notifikasi (Android 13+) ───
   Future<bool> requestPermission() async {
+    // Tidak didukung di Web
+    if (kIsWeb) return false;
+
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
@@ -156,6 +163,7 @@ class NotificationService {
 
   // ─── Batalkan semua notifikasi ───
   Future<void> batalkanSemua() async {
+    if (kIsWeb) return;
     await _plugin.cancelAll();
     debugPrint('Semua notifikasi dibatalkan.');
   }

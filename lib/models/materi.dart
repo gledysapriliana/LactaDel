@@ -24,7 +24,7 @@ class Materi {
   final List<String> poinTindakan; // "Apa yang dapat dilakukan Ayah?"
   final List<String>? poinBelajar; // "Pada materi ini Anda akan mempelajari" (khusus Peran Ayah)
   final List<Referensi> referensi;
-  final String? videoUrl; // Hanya untuk Dukungan Emosional
+  final String? videoUrl; // URL video (Dukungan Emosional, Informasional, Instrumental, Penghargaan)
 
   const Materi({
     required this.id,

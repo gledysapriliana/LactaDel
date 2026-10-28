@@ -38,8 +38,8 @@ class ReminderProvider extends ChangeNotifier {
     try {
       _pengaturan = await _firestoreService.getPengaturanPengingat(uid);
 
-      // Jika pengaturan aktif, jadwalkan ulang notifikasi
-      if (_pengaturan.aktif) {
+      // Jika pengaturan aktif, jadwalkan ulang notifikasi (tidak didukung di Web)
+      if (!kIsWeb && _pengaturan.aktif) {
         await _notifService.jadwalkanPengingat(
           intervalJam: _pengaturan.intervalJam,
           waktuMulai: _pengaturan.waktuMulai,
@@ -88,24 +88,26 @@ class ReminderProvider extends ChangeNotifier {
       // Simpan ke Firestore
       await _firestoreService.savePengaturanPengingat(uid, _pengaturan);
 
-      // Jadwalkan atau batalkan notifikasi
-      if (_pengaturan.aktif) {
-        final granted = await _notifService.requestPermission();
-        if (!granted) {
-          _errorMessage =
-              'Izin notifikasi ditolak. Aktifkan di pengaturan HP.';
-          _isLoading = false;
-          notifyListeners();
-          return false;
-        }
+      // Jadwalkan atau batalkan notifikasi (tidak didukung di Web)
+      if (!kIsWeb) {
+        if (_pengaturan.aktif) {
+          final granted = await _notifService.requestPermission();
+          if (!granted) {
+            _errorMessage =
+                'Izin notifikasi ditolak. Aktifkan di pengaturan HP.';
+            _isLoading = false;
+            notifyListeners();
+            return false;
+          }
 
-        await _notifService.jadwalkanPengingat(
-          intervalJam: _pengaturan.intervalJam,
-          waktuMulai: _pengaturan.waktuMulai,
-          jenisSuara: _pengaturan.jenisSuara,
-        );
-      } else {
-        await _notifService.batalkanSemua();
+          await _notifService.jadwalkanPengingat(
+            intervalJam: _pengaturan.intervalJam,
+            waktuMulai: _pengaturan.waktuMulai,
+            jenisSuara: _pengaturan.jenisSuara,
+          );
+        } else {
+          await _notifService.batalkanSemua();
+        }
       }
 
       _isLoading = false;

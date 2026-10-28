@@ -91,7 +91,7 @@ class MateriData {
           url: '',
         ),
       ],
-      videoUrl: '', // URL video akan diisi nanti
+      videoUrl: 'https://drive.google.com/file/d/1viu7b4DhkoyZGd1WmBASiAW-fwLD3ejT/view?usp=sharing',
     ),
 
     // ══════════════════════════════════════════
@@ -133,6 +133,7 @@ class MateriData {
           url: 'https://www.who.int/publications',
         ),
       ],
+      videoUrl: 'https://drive.google.com/file/d/1of93N6r2K1BfNWwS-n7JMJlSUyg5TqDE/view?usp=sharing',
     ),
 
     // ══════════════════════════════════════════
@@ -170,6 +171,7 @@ class MateriData {
           url: 'https://www.kemkes.go.id',
         ),
       ],
+      videoUrl: 'https://drive.google.com/file/d/1DaaAs5bShWpZ2vuJGxNjtsxxxA-NW_W4/view?usp=sharing',
     ),
 
     // ══════════════════════════════════════════
@@ -212,6 +214,7 @@ class MateriData {
           url: 'https://www.bps.go.id',
         ),
       ],
+      videoUrl: 'https://drive.google.com/file/d/1O-nIgwW-Xu_wP1bYkjQ6hVuUSayjJW0z/view?usp=sharing',
     ),
 
     // ══════════════════════════════════════════

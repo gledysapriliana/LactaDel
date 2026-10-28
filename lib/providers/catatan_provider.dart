@@ -49,7 +49,8 @@ class CatatanProvider extends ChangeNotifier {
     final uid = _currentUid;
     if (uid == null) {
       _errorMessage = 'User belum login.';
-      notifyListeners();
+      // Gunakan microtask agar tidak crash saat dipanggil dari didChangeDependencies
+      Future.microtask(notifyListeners);
       return;
     }
 
@@ -57,7 +58,8 @@ class CatatanProvider extends ChangeNotifier {
     _catatanSubscription?.cancel();
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    // Gunakan microtask agar tidak crash saat dipanggil dari didChangeDependencies
+    Future.microtask(notifyListeners);
 
     _catatanSubscription = _firestoreService.streamCatatanMenyusui(uid).listen(
       (daftar) {
