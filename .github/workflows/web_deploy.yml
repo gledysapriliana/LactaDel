@@ -1,0 +1,41 @@
+name: Build & Deploy Flutter Web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Checkout repository
+      - uses: actions/checkout@v4
+
+      # 2️⃣ Set up Flutter (stable channel)
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.22.0'
+
+      # 3️⃣ Get Flutter packages
+      - name: Get Flutter packages
+        run: flutter pub get
+
+      # 4️⃣ Build web release
+      - name: Build Flutter web
+        run: flutter build web --release
+
+      # 5️⃣ Install Firebase CLI
+      - name: Install Firebase CLI
+        run: |
+          curl -sL https://firebase.tools | bash
+
+      # 6️⃣ Deploy to Firebase Hosting (requires FIREBASE_TOKEN secret)
+      - name: Deploy to Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase use --add
+          firebase deploy --only hosting
