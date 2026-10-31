@@ -14,7 +14,7 @@ class ReminderProvider extends ChangeNotifier {
   final NotificationService _notifService = NotificationService.instance;
 
   ReminderProvider({FirestoreService? firestoreService})
-      : _firestoreService = firestoreService ?? FirestoreService();
+    : _firestoreService = firestoreService ?? FirestoreService();
 
   PengaturanPengingat _pengaturan = PengaturanPengingat();
   bool _isLoading = false;
