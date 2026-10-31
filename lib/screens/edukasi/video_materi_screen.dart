@@ -1,12 +1,13 @@
-/// Layar Video Materi — membuka video Google Drive via url_launcher.
-/// Menampilkan thumbnail dengan tombol putar, lalu buka di browser/app.
+/// Layar Video Materi — memutar video lokal dari assets menggunakan video_player.
+/// Menggantikan alur lama yang membuka Google Drive di browser.
 library;
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 import '../../core/app_colors.dart';
 
 class VideoMateriScreen extends StatefulWidget {
+  /// Path asset lokal, mis: 'assets/video/dukungan_emosioal.mp4'
   final String videoUrl;
   final String judul;
 
@@ -21,169 +22,262 @@ class VideoMateriScreen extends StatefulWidget {
 }
 
 class _VideoMateriScreenState extends State<VideoMateriScreen> {
-  bool _isLoading = false;
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+  bool _hasError = false;
+  bool _showControls = true;
 
-  Future<void> _bukaVideo() async {
-    final uri = Uri.parse(widget.videoUrl);
-    setState(() => _isLoading = true);
+  @override
+  void initState() {
+    super.initState();
+    _initVideo();
+  }
 
+  Future<void> _initVideo() async {
     try {
-      final bisa = await canLaunchUrl(uri);
-      if (bisa) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak dapat membuka video.')),
-          );
-        }
-      }
+      _controller = VideoPlayerController.asset(widget.videoUrl);
+      await _controller.initialize();
+      _controller.addListener(_onVideoUpdate);
+      if (mounted) setState(() => _isInitialized = true);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _hasError = true);
+      debugPrint('Error inisialisasi video: $e');
     }
+  }
+
+  void _onVideoUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  void _togglePlayPause() {
+    setState(() {
+      if (_controller.value.isPlaying) {
+        _controller.pause();
+      } else {
+        _controller.play();
+      }
+    });
+    _autoHideControls();
+  }
+
+  void _toggleControls() {
+    setState(() => _showControls = !_showControls);
+    if (_showControls) _autoHideControls();
+  }
+
+  void _autoHideControls() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _controller.value.isPlaying) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onVideoUpdate);
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final adaVideo = widget.videoUrl.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Video ${widget.judul}', style: const TextStyle(fontSize: 16)),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Video ${widget.judul}',
+          style: const TextStyle(fontSize: 15, color: Colors.white),
+        ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ─── Thumbnail / Area Video ───
-              GestureDetector(
-                onTap: adaVideo ? _bukaVideo : null,
-                child: Container(
-                  width: double.infinity,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isDark
-                          ? [AppColors.darkSurface, AppColors.darkBackground]
-                          : [AppColors.backgroundLight, Colors.white],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.darkPrimary.withAlpha(60)
-                          : AppColors.primary.withAlpha(60),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withAlpha(30),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: _isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            color: theme.colorScheme.primary,
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
-                                size: 44,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              adaVideo
-                                  ? 'Tap untuk memutar video'
-                                  : 'Video akan segera tersedia',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
+      body: Column(
+        children: [
+          // ─── Area Video ───
+          Expanded(
+            child: GestureDetector(
+              onTap: _isInitialized ? _toggleControls : null,
+              child: Container(
+                color: Colors.black,
+                child: _buildVideoArea(theme, isDark),
               ),
-              const SizedBox(height: 28),
+            ),
+          ),
 
-              // ─── Judul ───
-              Text(
+          // ─── Judul di bawah video ───
+          if (_isInitialized)
+            Container(
+              width: double.infinity,
+              color: isDark ? AppColors.darkBackground : Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Text(
                 widget.judul,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                adaVideo
-                    ? 'Video akan dibuka di browser atau aplikasi Google Drive Anda.'
-                    : 'Video untuk materi ini belum tersedia.\nSilakan kembali lagi nanti.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 28),
+            ),
+        ],
+      ),
+    );
+  }
 
-              // ─── Tombol Putar ───
-              if (adaVideo)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _bukaVideo,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.play_circle_outline),
-                    label: Text(_isLoading ? 'Membuka...' : 'Tonton Video'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+  Widget _buildVideoArea(ThemeData theme, bool isDark) {
+    // ── Error ──
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 56),
+            const SizedBox(height: 16),
+            const Text(
+              'Gagal memuat video.',
+              style: TextStyle(color: Colors.white70, fontSize: 15),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── Loading ──
+    if (!_isInitialized) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: theme.colorScheme.primary),
+            const SizedBox(height: 16),
+            const Text(
+              'Memuat video...',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── Video Player ──
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Video
+        Center(
+          child: AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
           ),
         ),
+
+        // Overlay kontrol (tampil/hilang)
+        AnimatedOpacity(
+          opacity: _showControls ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 300),
+          child: _buildControls(theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildControls(ThemeData theme) {
+    final position = _controller.value.position;
+    final duration = _controller.value.duration;
+    final isPlaying = _controller.value.isPlaying;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.transparent, Colors.black54, Colors.black87],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // ── Tombol Play/Pause di tengah ──
+          Expanded(
+            child: Center(
+              child: GestureDetector(
+                onTap: _togglePlayPause,
+                child: Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white54, width: 2),
+                  ),
+                  child: Icon(
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Progress bar & waktu ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                // Slider
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                    trackHeight: 3,
+                    activeTrackColor: theme.colorScheme.primary,
+                    inactiveTrackColor: Colors.white30,
+                    thumbColor: theme.colorScheme.primary,
+                    overlayColor: theme.colorScheme.primary.withAlpha(60),
+                  ),
+                  child: Slider(
+                    value: position.inMilliseconds.toDouble().clamp(
+                          0,
+                          duration.inMilliseconds.toDouble(),
+                        ),
+                    max: duration.inMilliseconds.toDouble(),
+                    onChanged: (val) {
+                      _controller.seekTo(Duration(milliseconds: val.toInt()));
+                    },
+                  ),
+                ),
+
+                // Waktu
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(position),
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      Text(
+                        _formatDuration(duration),
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

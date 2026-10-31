@@ -6,6 +6,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../../core/app_colors.dart';
 import '../../models/materi.dart';
 import 'referensi_screen.dart';
@@ -301,44 +302,153 @@ class _BelajarSection extends StatelessWidget {
   }
 }
 
-/// Area video placeholder (Dukungan Emosional)
-class _VideoSection extends StatelessWidget {
+/// Area video — menampilkan frame pertama video sebagai thumbnail
+/// dengan overlay tombol play. Tidak memerlukan plugin tambahan.
+class _VideoSection extends StatefulWidget {
   final String videoUrl;
   final VoidCallback onTap;
 
   const _VideoSection({required this.videoUrl, required this.onTap});
 
   @override
+  State<_VideoSection> createState() => _VideoSectionState();
+}
+
+class _VideoSectionState extends State<_VideoSection> {
+  VideoPlayerController? _controller;
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initThumbnail();
+  }
+
+  Future<void> _initThumbnail() async {
+    if (widget.videoUrl.isEmpty) return;
+    try {
+      final ctrl = VideoPlayerController.asset(widget.videoUrl);
+      await ctrl.initialize();
+      // Seek ke detik 0 lalu pause — hasilnya = frame pertama sebagai thumbnail
+      await ctrl.seekTo(Duration.zero);
+      await ctrl.pause();
+      if (mounted) {
+        setState(() {
+          _controller = ctrl;
+          _isReady = true;
+        });
+      } else {
+        ctrl.dispose();
+      }
+    } catch (e) {
+      debugPrint('Gagal load thumbnail video: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final adaVideo = widget.videoUrl.isNotEmpty;
 
-    return InkWell(
-      onTap: videoUrl.isNotEmpty ? onTap : null,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: double.infinity,
-        height: 200,
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return GestureDetector(
+      onTap: adaVideo ? widget.onTap : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: double.infinity,
+          height: 200,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Icon(
-                Icons.play_circle_fill,
-                size: 56,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                videoUrl.isNotEmpty
-                    ? 'Tonton Video'
-                    : 'Video akan segera tersedia',
-                style: theme.textTheme.bodySmall,
-              ),
+              // ── Background / Thumbnail ──
+              if (_isReady && _controller != null)
+                AspectRatio(
+                  aspectRatio: _controller!.value.aspectRatio,
+                  child: VideoPlayer(_controller!),
+                )
+              else
+                // Placeholder selama thumbnail dimuat
+                Container(
+                  color: isDark ? AppColors.darkSurface : Colors.grey.shade200,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+
+              // ── Gradient gelap di atas thumbnail ──
+              if (_isReady)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(160),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+
+              // ── Tombol Play di tengah ──
+              if (adaVideo)
+                Center(
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(220),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(60),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.play_arrow_rounded,
+                      size: 38,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+
+              // ── Label "Tonton Video" di bawah ──
+              if (_isReady && adaVideo)
+                Positioned(
+                  left: 12,
+                  bottom: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Tonton Video',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -346,6 +456,7 @@ class _VideoSection extends StatelessWidget {
     );
   }
 }
+
 
 /// Satu poin tindakan dengan ikon centang
 class _ActionItem extends StatelessWidget {
