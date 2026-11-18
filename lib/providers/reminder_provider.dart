@@ -4,7 +4,8 @@
 library;
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart'
+    show ChangeNotifier, debugPrint, kIsWeb;
 import '../models/pengaturan_pengingat.dart';
 import '../services/firestore_service.dart';
 import '../services/notification_service.dart';

@@ -7,7 +7,9 @@
 /// 5. Informasi aplikasi LactaDel
 library;
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
@@ -16,9 +18,231 @@ import '../../providers/auth_provider.dart';
 import '../../providers/catatan_provider.dart';
 import '../../providers/reminder_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/logo_header.dart';
+import '../../widgets/user_avatar.dart';
 
 class ProfilScreen extends StatelessWidget {
   const ProfilScreen({super.key});
+
+  // ─── Dialog / Bottom Sheet Ubah Foto Profil ───
+  void _showEditFotoDialog(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    final hasFoto = authProvider.appUser?.fotoProfil != null &&
+        authProvider.appUser!.fotoProfil!.isNotEmpty;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetCtx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withAlpha(100),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Foto Profil',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pilih sumber foto untuk profil Ayah:',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 1. Ambil dari Kamera
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha(25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.camera_alt_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                  title: const Text('Ambil Foto dari Kamera'),
+                  subtitle: const Text('Gunakan kamera ponsel langsung'),
+                  onTap: () {
+                    Navigator.pop(bottomSheetCtx);
+                    _pickAndSaveImage(context, ImageSource.camera);
+                  },
+                ),
+
+                // 2. Pilih dari Galeri
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withAlpha(40),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.photo_library_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                  title: const Text('Pilih dari Galeri'),
+                  subtitle: const Text('Pilih foto yang tersimpan di galeri'),
+                  onTap: () {
+                    Navigator.pop(bottomSheetCtx);
+                    _pickAndSaveImage(context, ImageSource.gallery);
+                  },
+                ),
+
+                // 3. Hapus Foto (hanya jika ada foto)
+                if (hasFoto) ...[
+                  const Divider(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withAlpha(25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        size: 22,
+                      ),
+                    ),
+                    title: const Text(
+                      'Hapus Foto Profil',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: const Text('Kembali menggunakan inisial nama'),
+                    onTap: () async {
+                      Navigator.pop(bottomSheetCtx);
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Hapus Foto Profil'),
+                          content: const Text(
+                            'Apakah Ayah yakin ingin menghapus foto profil ini?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Batal'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Hapus'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true && context.mounted) {
+                        final authProv = context.read<AuthProvider>();
+                        await authProv.updateFotoProfil(null);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Foto profil berhasil dihapus.'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ─── Proses Ambil & Simpan Gambar ───
+  Future<void> _pickAndSaveImage(BuildContext context, ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (pickedFile == null || !context.mounted) return;
+
+      final bytes = await pickedFile.readAsBytes();
+      if (!context.mounted) return;
+
+      final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+      final authProv = context.read<AuthProvider>();
+      final success = await authProv.updateFotoProfil(base64Image);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Foto profil berhasil diperbarui!'
+                  : (authProv.errorMessage ?? 'Gagal memperbarui foto profil.'),
+            ),
+            backgroundColor: success ? AppColors.success : AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error memilih gambar: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memilih gambar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   // ─── Dialog Ubah Nama ───
   void _showEditNamaDialog(BuildContext context, String currentNama) {
@@ -242,6 +466,7 @@ class ProfilScreen extends StatelessWidget {
 
     final nama = authProvider.appUser?.nama ?? 'Ayah';
     final email = authProvider.appUser?.email ?? '';
+    final fotoProfil = authProvider.appUser?.fotoProfil;
 
     return Scaffold(
       appBar: AppBar(
@@ -253,8 +478,12 @@ class ProfilScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ─── Logo UNSRI + Rumah Kita ───
+              const LogoHeader(height: 28),
+              const SizedBox(height: 16),
+
               // ─── Header Profil (Avatar + Nama + Email) ───
-              _buildProfileHeader(context, nama, email, isDark),
+              _buildProfileHeader(context, nama, email, fotoProfil, isDark),
               const SizedBox(height: 24),
 
               // ─── Bagian: Pengaturan Akun ───
@@ -323,10 +552,10 @@ class ProfilScreen extends StatelessWidget {
     BuildContext context,
     String nama,
     String email,
+    String? fotoProfil,
     bool isDark,
   ) {
     final theme = Theme.of(context);
-    final initial = nama.isNotEmpty ? nama[0].toUpperCase() : 'A';
 
     return Container(
       width: double.infinity,
@@ -349,40 +578,44 @@ class ProfilScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Avatar
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary,
-                  AppColors.secondary,
+          // Avatar dengan tombol edit foto langsung
+          UserAvatar(
+            fotoProfil: fotoProfil,
+            nama: nama,
+            radius: 40,
+            showEditBadge: true,
+            onTap: () => _showEditFotoDialog(context),
+          ),
+          const SizedBox(height: 8),
+
+          // Tombol interaktif untuk ubah/tambah foto
+          InkWell(
+            onTap: () => _showEditFotoDialog(context),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    size: 15,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    fotoProfil != null ? 'Ubah Foto Profil' : 'Tambah Foto Profil',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withAlpha(60),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
 
           // Nama
           Text(

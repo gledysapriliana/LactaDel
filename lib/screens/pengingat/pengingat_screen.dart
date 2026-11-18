@@ -9,6 +9,7 @@ import '../../core/constants.dart';
 import '../../models/catatan_menyusui.dart';
 import '../../providers/catatan_provider.dart';
 import '../../providers/reminder_provider.dart';
+import '../../widgets/logo_header.dart';
 
 class PengingatScreen extends StatefulWidget {
   const PengingatScreen({super.key});
@@ -46,6 +47,10 @@ class _PengingatScreenState extends State<PengingatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─── Logo UNSRI + Rumah Kita ───
+            const LogoHeader(height: 28),
+            const SizedBox(height: 14),
+
             // ─── Header ───
             Row(
               children: [

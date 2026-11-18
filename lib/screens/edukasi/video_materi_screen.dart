@@ -5,6 +5,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/app_colors.dart';
+import '../../widgets/logo_header.dart';
 
 class VideoMateriScreen extends StatefulWidget {
   /// Path asset lokal, mis: 'assets/video/dukungan_emosioal.mp4'
@@ -96,9 +97,18 @@ class _VideoMateriScreenState extends State<VideoMateriScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(
-          'Video ${widget.judul}',
-          style: const TextStyle(fontSize: 15, color: Colors.white),
+        title: Row(
+          children: [
+            const LogoHeader(height: 22, showBackground: true),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Video ${widget.judul}',
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
       body: Column(

@@ -91,7 +91,7 @@ class MateriData {
           url: '',
         ),
       ],
-      videoUrl: 'assets/video/dukungan_emosioal.mp4',
+      videoUrl: 'assets/video/dukungan_emosional.mp4',
     ),
 
     // ══════════════════════════════════════════

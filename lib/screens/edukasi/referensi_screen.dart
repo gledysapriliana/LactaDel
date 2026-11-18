@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../models/materi.dart';
+import '../../widgets/logo_header.dart';
 
 class ReferensiScreen extends StatelessWidget {
   final Materi materi;
@@ -57,6 +58,10 @@ class ReferensiScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─── Logo Header ───
+            const LogoHeader(height: 28),
+            const SizedBox(height: 12),
+
             // ─── Header ───
             Container(
               width: double.infinity,

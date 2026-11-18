@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../models/catatan_menyusui.dart';
 import '../../providers/catatan_provider.dart';
+import '../../widgets/logo_header.dart';
 import '../home/home_screen.dart';
 
 class MonitoringScreen extends StatefulWidget {
@@ -141,6 +142,10 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ─── Logo UNSRI + Rumah Kita ───
+                      const LogoHeader(height: 28),
+                      const SizedBox(height: 14),
+
                       // ─── Header Info & Status Real-Time ───
                       _buildHeaderCard(context, isDark),
                       const SizedBox(height: 20),

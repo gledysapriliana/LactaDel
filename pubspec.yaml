@@ -25,6 +25,7 @@ dependencies:
   # Utilitas (Tahap 4)
   url_launcher: ^6.3.1
   video_player: ^2.9.6
+  image_picker: ^1.1.2
 
   # Notifikasi lokal (Tahap 5)
   flutter_local_notifications: ^18.0.1

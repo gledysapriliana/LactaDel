@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/logo_header.dart';
 import 'home_screen.dart';
 
 class BerandaTab extends StatelessWidget {
@@ -25,29 +26,10 @@ class BerandaTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─── Header: Logo + Notifikasi ───
+            // ─── Header: Logo UNSRI + Rumah Kita + Notifikasi ───
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(20),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    AppConstants.logoPath,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                const LogoHeader(height: 30),
                 const SizedBox(width: 10),
                 Text(
                   'LactaDel',

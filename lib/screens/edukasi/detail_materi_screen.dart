@@ -2,20 +2,28 @@
 /// Peran Ayah: kotak "Anda akan mempelajari" + tombol "Mulai Belajar".
 /// Dukungan Emosional: area video.
 /// Semua materi: penjelasan, poin tindakan, tombol Referensi.
-/// Sesuai desain layar 9 – 14.
+/// Sesuai desain layar 9 — 14.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/app_colors.dart';
 import '../../models/materi.dart';
+import '../../widgets/logo_header.dart';
 import 'referensi_screen.dart';
 import 'video_materi_screen.dart';
 
 class DetailMateriScreen extends StatelessWidget {
   final Materi materi;
 
-  const DetailMateriScreen({super.key, required this.materi});
+  /// Callback yang dipanggil saat user menekan "Mulai Belajar" di materi Peran Ayah
+  final VoidCallback? onMulaiBelajar;
+
+  const DetailMateriScreen({
+    super.key,
+    required this.materi,
+    this.onMulaiBelajar,
+  });
 
   /// Map nama ikon ke IconData
   IconData _getIcon(String iconName) {
@@ -42,7 +50,7 @@ class DetailMateriScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isPeranAyah = materi.id == 1;
-    final hasilVideo = materi.videoUrl != null;
+    final hasilVideo = materi.videoUrl != null && materi.videoUrl!.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,7 +63,13 @@ class DetailMateriScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─── Header dengan ilustrasi ───
+            // ——— Logo Header ———
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: LogoHeader(height: 28),
+            ),
+
+            // ——— Header dengan ilustrasi ———
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -123,7 +137,7 @@ class DetailMateriScreen extends StatelessWidget {
               ),
             ),
 
-            // ─── Area Video (Dukungan Emosional) ───
+            // ——— Area Video (Dukungan Emosional, etc) ———
             if (hasilVideo) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -145,7 +159,7 @@ class DetailMateriScreen extends StatelessWidget {
               const SizedBox(height: 16),
             ],
 
-            // ─── Kotak "Anda akan mempelajari" (khusus Peran Ayah) ───
+            // ——— Kotak "Anda akan mempelajari" (khusus Peran Ayah) ———
             if (isPeranAyah && materi.poinBelajar != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -154,7 +168,7 @@ class DetailMateriScreen extends StatelessWidget {
               const SizedBox(height: 16),
             ],
 
-            // ─── Penjelasan ───
+            // ——— Penjelasan ———
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -178,7 +192,7 @@ class DetailMateriScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // ─── Poin Tindakan: "Apa yang dapat dilakukan Ayah?" ───
+            // ——— Poin Tindakan: "Apa yang dapat dilakukan Ayah?" ———
             if (materi.poinTindakan.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -201,7 +215,7 @@ class DetailMateriScreen extends StatelessWidget {
               const SizedBox(height: 20),
             ],
 
-            // ─── Tombol Referensi ───
+            // ——— Tombol Referensi ———
             if (materi.referensi.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -222,16 +236,22 @@ class DetailMateriScreen extends StatelessWidget {
                 ),
               ),
 
-            // ─── Tombol "Mulai Belajar" (khusus Peran Ayah) ───
+            // ——— Tombol "Mulai Belajar" (khusus Peran Ayah) ———
             if (isPeranAyah) ...[
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Mulai Belajar'),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Panggil callback untuk memberitahu bahwa
+                      // user sudah membaca materi Peran Suami
+                      onMulaiBelajar?.call();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.arrow_forward),
+                    label: const Text('Mulai Belajar'),
                   ),
                 ),
               ),
@@ -367,7 +387,7 @@ class _VideoSectionState extends State<_VideoSection> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // ── Background / Thumbnail ──
+              // —— Background / Thumbnail ——
               if (_isReady && _controller != null)
                 AspectRatio(
                   aspectRatio: _controller!.value.aspectRatio,
@@ -385,7 +405,7 @@ class _VideoSectionState extends State<_VideoSection> {
                   ),
                 ),
 
-              // ── Gradient gelap di atas thumbnail ──
+              // —— Gradient gelap di atas thumbnail ——
               if (_isReady)
                 Container(
                   decoration: BoxDecoration(
@@ -400,7 +420,7 @@ class _VideoSectionState extends State<_VideoSection> {
                   ),
                 ),
 
-              // ── Tombol Play di tengah ──
+              // —— Tombol Play di tengah ——
               if (adaVideo)
                 Center(
                   child: Container(
@@ -425,7 +445,7 @@ class _VideoSectionState extends State<_VideoSection> {
                   ),
                 ),
 
-              // ── Label "Tonton Video" di bawah ──
+              // —— Label "Tonton Video" di bawah ——
               if (_isReady && adaVideo)
                 Positioned(
                   left: 12,

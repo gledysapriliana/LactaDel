@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../core/routes.dart';
+import '../../widgets/logo_header.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -94,7 +95,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
         child: SafeArea(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ─── Logo UNSRI + Rumah Kita di Sudut Kiri ───
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: LogoHeader(height: 28),
+              ),
+
               // ─── PageView (konten utama) ───
               Expanded(
                 child: PageView.builder(

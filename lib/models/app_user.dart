@@ -9,12 +9,14 @@ class AppUser {
   final String nama;
   final String email;
   final DateTime createdAt;
+  final String? fotoProfil;
 
   AppUser({
     required this.uid,
     required this.nama,
     required this.email,
     required this.createdAt,
+    this.fotoProfil,
   });
 
   /// Buat AppUser dari dokumen Firestore
@@ -34,6 +36,7 @@ class AppUser {
       nama: data['nama'] as String? ?? '',
       email: data['email'] as String? ?? '',
       createdAt: parsedCreatedAt,
+      fotoProfil: data['fotoProfil'] as String?,
     );
   }
 
@@ -44,6 +47,7 @@ class AppUser {
       'email': email,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': FieldValue.serverTimestamp(),
+      'fotoProfil': fotoProfil,
     };
   }
 
@@ -53,12 +57,15 @@ class AppUser {
     String? nama,
     String? email,
     DateTime? createdAt,
+    String? fotoProfil,
+    bool clearFotoProfil = false,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
       nama: nama ?? this.nama,
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
+      fotoProfil: clearFotoProfil ? null : (fotoProfil ?? this.fotoProfil),
     );
   }
 }
